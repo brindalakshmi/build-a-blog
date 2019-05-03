@@ -1,6 +1,6 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
-
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -10,13 +10,14 @@ db = SQLAlchemy(app)
 
 class Blog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120))
+    title = db.Column(db.Text(120))
     body = db.Column(db.Text)
+    date_posted = db.Column(db.DateTime)
    
-    def __init__(self, title, body):
+    def __init__(self, title, body, date_posted):
         self.title = title
         self.body = body
-       
+        self.date_posted = date_posted
 
 @app.route('/')
 def index():
@@ -37,10 +38,9 @@ def blog():
 def new_post():
     if request.method == 'POST':
         blog_title = request.form['blog-title']
-        
         blog_body = request.form['blog-entry']
+        date_posted = datetime.now()
         title_error = ''
-        date_posted_error = ''
         body_error = ''
 
         if not blog_title:
@@ -49,7 +49,7 @@ def new_post():
         if not blog_body:
             body_error = "Please enter a blog entry"
         if not body_error and not title_error:
-            new_entry = Blog(blog_title, blog_body)     
+            new_entry = Blog(blog_title, blog_body, date_posted)     
             db.session.add(new_entry)
             db.session.commit()        
             return redirect('/blog?id={}'.format(new_entry.id)) 
@@ -61,3 +61,5 @@ def new_post():
 
 if  __name__ == "__main__":
     app.run()
+
+ 
